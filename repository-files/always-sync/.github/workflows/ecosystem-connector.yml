@@ -18,17 +18,34 @@ permissions:
 
 jobs:
   # ==========================================================================
-  # AI Orchestration via Parent Control Center
+  # AI Orchestration for PRs
   # ==========================================================================
-  orchestrate:
-    name: Orchestrate
+  pr-orchestrate:
+    name: PR Orchestrate
+    if: github.event_name == 'pull_request'
     uses: jbcom/control-center/.github/workflows/ecosystem-orchestrator.yml@main
     with:
-      action: ${{ (github.event_name == 'pull_request' && 'review') || (github.event_name == 'issue_comment' && 'delegate') || 'sync' }}
+      action: review
       repository: ${{ github.repository }}
-      pr_number: ${{ github.event.pull_request.number || 0 }}
-      issue_number: ${{ github.event.issue.number || 0 }}
-      comment_body: ${{ github.event.comment.body || '' }}
+      pr_number: ${{ github.event.pull_request.number }}
+    secrets:
+      CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GOOGLE_JULES_API_KEY: ${{ secrets.GOOGLE_JULES_API_KEY }}
+      CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+
+  # ==========================================================================
+  # AI Orchestration for Issues
+  # ==========================================================================
+  issue-orchestrate:
+    name: Issue Orchestrate
+    if: github.event_name == 'issue_comment'
+    uses: jbcom/control-center/.github/workflows/ecosystem-orchestrator.yml@main
+    with:
+      action: delegate
+      repository: ${{ github.repository }}
+      issue_number: ${{ github.event.issue.number }}
+      comment_body: ${{ github.event.comment.body }}
     secrets:
       CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
       ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
