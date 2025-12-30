@@ -18,15 +18,31 @@ permissions:
 
 jobs:
   # ==========================================================================
-  # AI Orchestration for PRs
+  # Dogfooding Local Actions
   # ==========================================================================
-  pr-orchestrate:
-    name: PR Orchestrate
+  local-review:
+    name: Local AI Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Agentic PR Review
+        uses: ./.github/actions/agentic-pr-review
+        with:
+          github_token: ${{ secrets.CI_GITHUB_TOKEN }}
+          jules_api_key: ${{ secrets.GOOGLE_JULES_API_KEY }}
+
+  # ==========================================================================
+  # AI Orchestration (Testing Remote Call)
+  # ==========================================================================
+  orchestrate:
+    name: Remote Orchestrate
     if: github.event_name == 'pull_request'
     uses: jbcom/control-center/.github/workflows/ecosystem-orchestrator.yml@main
     with:
       action: review
       repository: ${{ github.repository }}
+      pr_number: ${{ github.event.pull_request.number }}
     secrets: inherit
 
   # ==========================================================================
