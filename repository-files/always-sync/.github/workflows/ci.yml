@@ -53,14 +53,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-          cache: 'npm'
-      - run: npm ci
-      - run: npm run lint --if-present
-      - run: npm run build --if-present
-      - run: npm test --if-present
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run lint --if-present
+      - run: pnpm run build --if-present
+      - run: pnpm test --if-present
 
   python:
     name: Python
@@ -107,7 +110,7 @@ jobs:
           if [ -f docs/Makefile ]; then
             cd docs && make html
           elif [ -f package.json ] && grep -q "build:docs" package.json; then
-            npm run build:docs
+            pnpm run build:docs
           elif [ -f Cargo.toml ]; then
             cargo doc --no-deps
           fi
