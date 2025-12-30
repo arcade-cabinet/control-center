@@ -27,10 +27,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Agentic PR Review
-        uses: ./repository-files/always-sync/.github/actions/agentic-pr-review
+        uses: ./.github/actions/agentic-pr-review
         with:
           github_token: ${{ secrets.CI_GITHUB_TOKEN }}
           jules_api_key: ${{ secrets.GOOGLE_JULES_API_KEY }}
+
+  # ==========================================================================
+  # AI Orchestration via Parent Control Center (Verification)
+  # ==========================================================================
+  remote-orchestrate:
+    name: Remote Orchestrate
+    if: github.event_name == 'pull_request' || github.event_name == 'issue_comment'
+    uses: jbcom/control-center/.github/workflows/ecosystem-orchestrator.yml@main
+    with:
+      action: ${{ (github.event_name == 'pull_request' && 'review') || (github.event_name == 'issue_comment' && 'delegate') || 'sync' }}
+      repository: ${{ github.repository }}
+      pr_number: ${{ github.event.pull_request.number || 0 }}
+      issue_number: ${{ github.event.issue.number || github.event.pull_request.number || 0 }}
+      comment_body: ${{ github.event.comment.body || '' }}
+    secrets:
+      CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GOOGLE_JULES_API_KEY: ${{ secrets.GOOGLE_JULES_API_KEY }}
+      CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
 
   # ==========================================================================
   # Local Auto-fix for CI failures
@@ -44,7 +63,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: CI Resolution
-        uses: ./repository-files/always-sync/.github/actions/agentic-ci-resolution
+        uses: ./.github/actions/agentic-ci-resolution
         with:
           github_token: ${{ secrets.CI_GITHUB_TOKEN }}
           cursor_api_key: ${{ secrets.CURSOR_API_KEY }}
