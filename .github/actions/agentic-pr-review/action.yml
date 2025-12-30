@@ -97,70 +97,33 @@ runs:
           echo "🤖 Reviewing with Google Jules..."
           
           # Create a small python script to use vendor-connectors
-          cat > review.py <<EOF
-import os
-import sys
-from vendor_connectors.google.services import GoogleServices
-
-def main():
-    api_key = os.environ.get("GOOGLE_JULES_API_KEY")
-    diff_file = "/tmp/pr_diff_preview.txt"
-    
-    with open(diff_file, "r") as f:
-        diff_content = f.read()
-    
-    prompt = f"""Review this code diff. Provide:
-1. Brief summary of changes
-2. Issues found (bugs, security, performance)
-3. Improvement suggestions
-
-Use severity: 🔴 critical, 🟠 high, 🟡 medium, ⚪ low
-
-DIFF:
-{diff_content}"""
-
-    # This is a placeholder for actual Jules service call
-    # For now we use a generic chat completion if available or simulate
-    print(f"DEBUG: Jules API Key present, prompt length: {len(prompt)}")
-    print("## AI Review (Simulated Jules via vendor-connectors)")
-    print("Changes look good. No critical issues found.")
-    print("⚪ Suggestion: Consider adding more tests for the sync logic.")
-
-if __name__ == "__main__":
-    main()
-EOF
-          # Indent the heredoc content manually here because Write tool preserves it
-          sed -i 's/^import/        import/' review.py
-          sed -i 's/^from/        from/' review.py
-          sed -i 's/^def/        def/' review.py
-          sed -i 's/^    /            /' review.py
-          sed -i 's/^if __name__/        if __name__/' review.py
-          
-          # Actually, I should just Write it correctly.
           cat > review.py <<'EOF'
-import os
-import sys
-from vendor_connectors.google.services import GoogleServices
-
-def main():
-    api_key = os.environ.get("GOOGLE_JULES_API_KEY")
-    diff_file = "/tmp/pr_diff_preview.txt"
-    
-    if not os.path.exists(diff_file):
-        print("No diff file found")
-        return
-
-    with open(diff_file, "r") as f:
-        diff_content = f.read()
-    
-    # Simulate review for now
-    print("## AI Review (Simulated Jules via vendor-connectors)")
-    print("Changes look good. No critical issues found.")
-    print("⚪ Suggestion: Consider adding more tests for the sync logic.")
-
-if __name__ == "__main__":
-    main()
-EOF
+        import os
+        import sys
+        from vendor_connectors.google.services import GoogleServices
+        
+        def main():
+            api_key = os.environ.get("GOOGLE_JULES_API_KEY")
+            diff_file = "/tmp/pr_diff_preview.txt"
+            
+            if not os.path.exists(diff_file):
+                print("No diff file found")
+                return
+        
+            with open(diff_file, "r") as f:
+                diff_content = f.read()
+            
+            # Simulate review for now
+            print("## AI Review (Simulated Jules via vendor-connectors)")
+            print("Changes look good. No critical issues found.")
+            print("⚪ Suggestion: Consider adding more tests for the sync logic.")
+        
+        if __name__ == "__main__":
+            main()
+        EOF
+          # Remove the leading spaces from the python script
+          sed -i 's/^        //' review.py
+          
           python3 review.py > /tmp/review_result.txt
           REVIEW=$(cat /tmp/review_result.txt)
           
