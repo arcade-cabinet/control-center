@@ -1,0 +1,12 @@
+[package]
+name = "arcade-cabinet-rust-app"
+version = "0.1.0"
+edition = "2021"
+authors = ["Arcade Cabinet Team"]
+description = "A new arcade cabinet game in Rust"
+
+[dependencies]
+bevy = "0.13"
+
+[dev-dependencies]
+criterion = "0.5"

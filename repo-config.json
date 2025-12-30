@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/jbcom/control-center/main/schemas/repo-config.schema.json",
+  "version": "1.0.0",
+  "description": "Arcade Cabinet Organization Configuration",
+  "projects": {},
+  "defaults": {
+    "merge_settings": {
+      "allow_squash_merge": true,
+      "allow_merge_commit": false,
+      "allow_rebase_merge": false,
+      "allow_auto_merge": true,
+      "delete_branch_on_merge": true
+    },
+    "features": {
+      "has_issues": true,
+      "has_projects": true,
+      "has_wiki": false,
+      "has_discussions": true
+    },
+    "security": {
+      "dependabot_security_updates": "enabled",
+      "secret_scanning": "enabled",
+      "secret_scanning_push_protection": "enabled",
+      "vulnerability_alerts": true
+    }
+  },
+  "ecosystems": {
+    "python": {
+      "files": {
+        "always": ["always-sync", "python"],
+        "initial": ["initial-only/python"]
+      },
+      "repos": [
+        "dragons-labyrinth",
+        "rivers-of-reckoning"
+      ]
+    },
+    "nodejs": {
+      "files": {
+        "always": ["always-sync", "nodejs"],
+        "initial": ["initial-only/node"]
+      },
+      "repos": [
+        "otter-elite-force",
+        "ebb-and-bloom",
+        "realm-walker",
+        "otter-river-rush",
+        "protocol-silent-night",
+        "rivermarsh"
+      ]
+    },
+    "rust": {
+      "files": {
+        "always": ["always-sync", "rust"],
+        "initial": ["initial-only/rust"]
+      },
+      "repos": [
+        "echoes-of-beastlight",
+        "cosmic-cults"
+      ]
+    },
+    "control": {
+      "repos": [
+        "control-center",
+        ".github"
+      ]
+    }
+  },
+  "organizations": {
+    "primary": "arcade-cabinet",
+    "managed": ["arcade-cabinet"],
+    "domains": {
+      "arcade-cabinet": "arcade-cabinet.org"
+    }
+  }
+}

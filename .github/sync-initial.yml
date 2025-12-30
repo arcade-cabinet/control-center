@@ -1,0 +1,39 @@
+# Initial-Sync Configuration
+# These files are synced ONLY if they do NOT exist in the target repository
+#
+# Documentation: https://github.com/BetaHuhn/repo-file-sync-action
+
+group:
+  # ============================================================================
+  # Python Starter Templates
+  # ============================================================================
+  - files:
+      - source: repository-files/initial-only/python/pyproject.toml
+        dest: pyproject.toml
+    repos: |
+      arcade-cabinet/dragons-labyrinth
+      arcade-cabinet/rivers-of-reckoning
+
+  # ============================================================================
+  # Node.js Starter Templates
+  # ============================================================================
+  - files:
+      - source: repository-files/initial-only/node/package.json
+        dest: package.json
+    repos: |
+      arcade-cabinet/otter-elite-force
+      arcade-cabinet/ebb-and-bloom
+      arcade-cabinet/realm-walker
+      arcade-cabinet/otter-river-rush
+      arcade-cabinet/protocol-silent-night
+      arcade-cabinet/rivermarsh
+
+  # ============================================================================
+  # Rust Starter Templates
+  # ============================================================================
+  - files:
+      - source: repository-files/initial-only/rust/Cargo.toml
+        dest: Cargo.toml
+    repos: |
+      arcade-cabinet/echoes-of-beastlight
+      arcade-cabinet/cosmic-cults

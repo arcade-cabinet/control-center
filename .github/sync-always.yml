@@ -1,0 +1,68 @@
+# Always-Sync Configuration
+# These files are synced on EVERY run and OVERWRITE existing files
+#
+# Documentation: https://github.com/BetaHuhn/repo-file-sync-action
+
+group:
+  # ============================================================================
+  # Core files - synced to ALL repositories
+  # ============================================================================
+  - files:
+      # Cursor rules (always overwrite)
+      - source: repository-files/always-sync/.cursor/rules/
+        dest: .cursor/rules/
+        deleteOrphaned: true
+      # GitHub workflows (don't delete repo-specific ones)
+      - source: repository-files/always-sync/.github/workflows/
+        dest: .github/workflows/
+        deleteOrphaned: false
+      # GitHub agents
+      - source: repository-files/always-sync/.github/agents/
+        dest: .github/agents/
+        deleteOrphaned: true
+      # Documentation base
+      - source: repository-files/always-sync/docs/README.md
+        dest: docs/README.md
+    repos: &all_repos |
+      arcade-cabinet/otter-elite-force
+      arcade-cabinet/dragons-labyrinth
+      arcade-cabinet/ebb-and-bloom
+      arcade-cabinet/realm-walker
+      arcade-cabinet/rivers-of-reckoning
+      arcade-cabinet/otter-river-rush
+      arcade-cabinet/protocol-silent-night
+      arcade-cabinet/rivermarsh
+      arcade-cabinet/echoes-of-beastlight
+      arcade-cabinet/cosmic-cults
+
+  # ============================================================================
+  # Language-specific - synced to specific ecosystems
+  # ============================================================================
+  
+  # Python
+  - files:
+      - source: repository-files/always-sync/.github/workflows/ci.yml
+        dest: .github/workflows/ci.yml
+    repos: |
+      arcade-cabinet/dragons-labyrinth
+      arcade-cabinet/rivers-of-reckoning
+
+  # Node.js
+  - files:
+      - source: repository-files/always-sync/.github/workflows/ci.yml
+        dest: .github/workflows/ci.yml
+    repos: |
+      arcade-cabinet/otter-elite-force
+      arcade-cabinet/ebb-and-bloom
+      arcade-cabinet/realm-walker
+      arcade-cabinet/otter-river-rush
+      arcade-cabinet/protocol-silent-night
+      arcade-cabinet/rivermarsh
+
+  # Rust
+  - files:
+      - source: repository-files/always-sync/.github/workflows/ci.yml
+        dest: .github/workflows/ci.yml
+    repos: |
+      arcade-cabinet/echoes-of-beastlight
+      arcade-cabinet/cosmic-cults
