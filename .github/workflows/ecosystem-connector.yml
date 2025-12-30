@@ -33,19 +33,6 @@ jobs:
           jules_api_key: ${{ secrets.GOOGLE_JULES_API_KEY }}
 
   # ==========================================================================
-  # AI Orchestration (Testing Remote Call)
-  # ==========================================================================
-  orchestrate:
-    name: Remote Orchestrate
-    if: github.event_name == 'pull_request'
-    uses: jbcom/control-center/.github/workflows/ecosystem-orchestrator.yml@main
-    with:
-      action: review
-      repository: ${{ github.repository }}
-      pr_number: ${{ github.event.pull_request.number }}
-    secrets: inherit
-
-  # ==========================================================================
   # Local Auto-fix for CI failures
   # ==========================================================================
   fix-ci:
