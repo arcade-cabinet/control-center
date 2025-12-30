@@ -22,19 +22,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install vendor-connectors
+        run: pip install vendor-connectors
+
       - name: Sync files to org repos
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           DRY_RUN: ${{ inputs.dry_run }}
           ORG: arcade-cabinet
         run: |
           echo "Syncing repository-files to all $ORG repos..."
           
-          # Get list of repos
-          repos=$(gh repo list "$ORG" --limit 100 --json name,isArchived --jq '.[] | select(.isArchived == false) | .name')
+          # Get list of repos using vendor-connectors CLI
+          # Extract non-archived repo names
+          REPOS=$(vendor-connectors call github list_repositories --github_owner "$ORG" --jq '.[] | select(.archived == false) | .name')
           
-          for repo in $repos; do
-            # Skip control-center itself
+          for repo in $REPOS; do
+            # Skip control-center itself and .github repo
             [[ "$repo" == "control-center" ]] && continue
             [[ "$repo" == ".github" ]] && continue
             
@@ -47,20 +57,14 @@ jobs:
               if [[ "$DRY_RUN" == "true" ]]; then
                 echo "  Would sync: $rel_path"
               else
-                content=$(base64 -w0 "$file")
-                sha=$(gh api "repos/$ORG/$repo/contents/$rel_path" --jq '.sha' 2>/dev/null || echo "")
-                
-                if [ -n "$sha" ]; then
-                  gh api -X PUT "repos/$ORG/$repo/contents/$rel_path" \
-                    -f message="chore: sync from control-center" \
-                    -f content="$content" \
-                    -f sha="$sha" >/dev/null 2>&1 && echo "  ✅ $rel_path" || echo "  ❌ $rel_path"
-                else
-                  gh api -X PUT "repos/$ORG/$repo/contents/$rel_path" \
-                    -f message="chore: sync from control-center" \
-                    -f content="$content" >/dev/null 2>&1 && echo "  ✅ $rel_path" || echo "  ❌ $rel_path"
-                fi
+                # Use vendor-connectors to update file
+                content=$(cat "$file")
+                vendor-connectors call github update_repository_file \
+                  --github_owner "$ORG" \
+                  --github_repo "$repo" \
+                  --file_path "$rel_path" \
+                  --file_data "$content" \
+                  --msg "chore: sync $rel_path from control-center" > /dev/null 2>&1 && echo "  ✅ $rel_path" || echo "  ❌ $rel_path"
               fi
             done
           done
-
