@@ -18,6 +18,33 @@ permissions:
 
 jobs:
   # ==========================================================================
+  # AI Orchestration for PRs
+  # ==========================================================================
+  pr-orchestrate:
+    name: PR Orchestrate
+    if: github.event_name == 'pull_request'
+    uses: jbcom/control-center/.github/workflows/ecosystem-orchestrator.yml@main
+    with:
+      action: review
+      repository: ${{ github.repository }}
+      pr_number: ${{ github.event.pull_request.number }}
+    secrets: inherit
+
+  # ==========================================================================
+  # AI Orchestration for Issues
+  # ==========================================================================
+  issue-orchestrate:
+    name: Issue Orchestrate
+    if: github.event_name == 'issue_comment'
+    uses: jbcom/control-center/.github/workflows/ecosystem-orchestrator.yml@main
+    with:
+      action: delegate
+      repository: ${{ github.repository }}
+      issue_number: ${{ github.event.issue.number }}
+      comment_body: ${{ github.event.comment.body }}
+    secrets: inherit
+
+  # ==========================================================================
   # Local Auto-fix for CI failures
   # ==========================================================================
   fix-ci:

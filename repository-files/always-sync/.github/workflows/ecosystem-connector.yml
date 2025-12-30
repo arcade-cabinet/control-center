@@ -28,11 +28,7 @@ jobs:
       action: review
       repository: ${{ github.repository }}
       pr_number: ${{ github.event.pull_request.number }}
-    secrets:
-      CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      GOOGLE_JULES_API_KEY: ${{ secrets.GOOGLE_JULES_API_KEY }}
-      CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+    secrets: inherit
 
   # ==========================================================================
   # AI Orchestration for Issues
@@ -46,11 +42,7 @@ jobs:
       repository: ${{ github.repository }}
       issue_number: ${{ github.event.issue.number }}
       comment_body: ${{ github.event.comment.body }}
-    secrets:
-      CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-      GOOGLE_JULES_API_KEY: ${{ secrets.GOOGLE_JULES_API_KEY }}
-      CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+    secrets: inherit
 
   # ==========================================================================
   # Local Auto-fix for CI failures
