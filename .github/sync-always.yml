@@ -20,6 +20,10 @@ group:
       - source: repository-files/always-sync/.github/agents/
         dest: .github/agents/
         deleteOrphaned: true
+      # GitHub actions
+      - source: repository-files/always-sync/.github/actions/
+        dest: .github/actions/
+        deleteOrphaned: true
       # Documentation base
       - source: repository-files/always-sync/docs/README.md
         dest: docs/README.md
