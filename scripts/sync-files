@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+# =============================================================================
+# sync-files - Sync shared files to managed repositories
+# =============================================================================
+
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="${SCRIPT_DIR}/.."
+CONFIG_FILE="${REPO_ROOT}/repo-config.json"
+GITHUB_ORG="${GITHUB_ORG:-arcade-cabinet}"
+
+# Options
+DRY_RUN=false
+VERBOSE=false
+
+# Colors
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+log_info()  { echo -e "${BLUE}[INFO]${NC} $*"; }
+log_ok()    { echo -e "${GREEN}[OK]${NC} $*"; }
+log_warn()  { echo -e "${YELLOW}[WARN]${NC} $*"; }
+log_error() { echo -e "${RED}[ERROR]${NC} $*" >&2; }
+
+sync_repo_files() {
+    local repo="$1"
+    local ecosystem="$2"
+    local full_repo="${GITHUB_ORG}/${repo}"
+    
+    log_info "Syncing files: $repo ($ecosystem)"
+    
+    # 1. Always Sync (from repository-files/always-sync)
+    if [[ -d "repository-files/always-sync" ]]; then
+        find repository-files/always-sync -type f | while read -r file; do
+            rel_path="${file#repository-files/always-sync/}"
+            
+            if [[ "$DRY_RUN" == "true" ]]; then
+                echo "  Would sync (always): $rel_path"
+            else
+                content=$(cat "$file")
+                # Use vendor-connectors if available, otherwise fallback to gh api
+                if command -v vendor-connectors &> /dev/null; then
+                    vendor-connectors call github update_repository_file \
+                        --github_owner "$GITHUB_ORG" \
+                        --github_repo "$repo" \
+                        --file_path "$rel_path" \
+                        --file_data "$content" \
+                        --msg "chore(sync): update $rel_path from control-center" > /dev/null 2>&1 && echo "  ✅ $rel_path" || echo "  ❌ $rel_path"
+                else
+                    # Fallback to gh api
+                    # (Simplified version, doesn't handle SHAs as well as vendor-connectors)
+                    echo "  Syncing $rel_path..."
+                    gh api -X PUT "repos/$full_repo/contents/$rel_path" \
+                        -f message="chore(sync): update $rel_path from control-center" \
+                        -f content="$(base64 -w0 "$file")" \
+                        -f sha="$(gh api "repos/$full_repo/contents/$rel_path" --jq '.sha' 2>/dev/null || echo "")" > /dev/null 2>&1 && echo "  ✅ $rel_path" || echo "  ❌ $rel_path"
+                fi
+            fi
+        done
+    fi
+
+    # 2. Initial Sync (from repository-files/initial-only)
+    # Get initial files for this ecosystem
+    local initial_dirs=$(jq -r ".ecosystems.\"$ecosystem\".files.initial[] // empty" "$CONFIG_FILE")
+    for dir in $initial_dirs; do
+        if [[ -d "repository-files/$dir" ]]; then
+            find "repository-files/$dir" -type f | while read -r file; do
+                rel_path="${file#repository-files/$dir/}"
+                
+                if [[ "$DRY_RUN" == "true" ]]; then
+                    echo "  Would sync (initial): $rel_path"
+                else
+                    # Only sync if file doesn't exist
+                    if ! gh api "repos/$full_repo/contents/$rel_path" --jq '.name' >/dev/null 2>&1; then
+                        content=$(cat "$file")
+                        if command -v vendor-connectors &> /dev/null; then
+                            vendor-connectors call github update_repository_file \
+                                --github_owner "$GITHUB_ORG" \
+                                --github_repo "$repo" \
+                                --file_path "$rel_path" \
+                                --file_data "$content" \
+                                --msg "chore(init): create $rel_path from control-center" > /dev/null 2>&1 && echo "  🆕 $rel_path" || echo "  ❌ $rel_path"
+                        else
+                            gh api -X PUT "repos/$full_repo/contents/$rel_path" \
+                                -f message="chore(init): create $rel_path from control-center" \
+                                -f content="$(base64 -w0 "$file")" > /dev/null 2>&1 && echo "  🆕 $rel_path" || echo "  ❌ $rel_path"
+                        fi
+                    fi
+                fi
+            done
+        fi
+    done
+}
+
+main() {
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --dry-run) DRY_RUN=true; shift ;;
+            --verbose|-v) VERBOSE=true; shift ;;
+            *) shift ;;
+        esac
+    done
+
+    # Iterate through ecosystems and their repos
+    jq -r '.ecosystems | to_entries[] | .key as $eco | .value.repos[] | "\($eco) \(.)"' "$CONFIG_FILE" | while read -r eco repo; do
+        [[ "$repo" == "control-center" ]] && continue
+        sync_repo_files "$repo" "$eco"
+    done
+}
+
+main "$@"

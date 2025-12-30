@@ -5,10 +5,20 @@ on:
     branches: [main]
     paths:
       - 'repository-files/**'
+      - 'repo-config.json'
+      - 'scripts/**'
   workflow_dispatch:
     inputs:
       dry_run:
         description: 'Dry run (no changes)'
+        type: boolean
+        default: false
+      sync_secrets:
+        description: 'Sync secrets'
+        type: boolean
+        default: false
+      configure_repos:
+        description: 'Configure repo settings'
         type: boolean
         default: false
 
@@ -30,62 +40,29 @@ jobs:
       - name: Install vendor-connectors
         run: pip install vendor-connectors
 
-      - name: Sync files to org repos
+      - name: Sync Secrets
+        if: github.event_name == 'push' || inputs.sync_secrets == true
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-          DRY_RUN: ${{ inputs.dry_run }}
-          ORG: arcade-cabinet
+          CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
+          GOOGLE_JULES_API_KEY: ${{ secrets.GOOGLE_JULES_API_KEY }}
         run: |
-          echo "Syncing repository-files to all $ORG repos..."
-          
-          # Get list of repos using vendor-connectors CLI
-          REPOS=$(vendor-connectors call github list_repositories --github_owner "$ORG" --jq '.[] | select(.archived == false) | .name')
-          
-          for repo in $REPOS; do
-            # Skip control-center itself
-            [[ "$repo" == "control-center" ]] && continue
-            
-            echo "📦 $ORG/$repo"
-            
-            # PHASE 1: Always Sync (Overwrite)
-            find repository-files/always-sync -type f | while read -r file; do
-              rel_path="${file#repository-files/always-sync/}"
-              
-              if [[ "$DRY_RUN" == "true" ]]; then
-                echo "  Would sync (always): $rel_path"
-              else
-                content=$(cat "$file")
-                vendor-connectors call github update_repository_file \
-                  --github_owner "$ORG" \
-                  --github_repo "$repo" \
-                  --file_path "$rel_path" \
-                  --file_data "$content" \
-                  --msg "chore(sync): update $rel_path from control-center" > /dev/null 2>&1 && echo "  ✅ $rel_path" || echo "  ❌ $rel_path"
-              fi
-            done
-            
-            # PHASE 2: Initial Sync (Create if missing)
-            if [ -d "repository-files/initial-only" ]; then
-              find repository-files/initial-only -type f | while read -r file; do
-                rel_path="${file#repository-files/initial-only/}"
-                # Remove first level directory (e.g., python/, node/) for destination
-                dest_path=$(echo "$rel_path" | cut -d/ -f2-)
-                
-                if [[ "$DRY_RUN" == "true" ]]; then
-                  echo "  Would sync (initial): $dest_path"
-                else
-                  # Only sync if file doesn't exist
-                  if ! gh api "repos/$ORG/$repo/contents/$dest_path" --jq '.name' >/dev/null 2>&1; then
-                    content=$(cat "$file")
-                    vendor-connectors call github update_repository_file \
-                      --github_owner "$ORG" \
-                      --github_repo "$repo" \
-                      --file_path "$dest_path" \
-                      --file_data "$content" \
-                      --msg "chore(init): create $dest_path from control-center" > /dev/null 2>&1 && echo "  🆕 $dest_path" || echo "  ❌ $dest_path"
-                  fi
-                fi
-              done
-            fi
-          done
+          chmod +x scripts/sync-secrets
+          ./scripts/sync-secrets ${{ inputs.dry_run == true && '--dry-run' || '' }} --all
+
+      - name: Configure Repos
+        if: github.event_name == 'push' || inputs.configure_repos == true
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        run: |
+          chmod +x scripts/configure-repos
+          ./scripts/configure-repos ${{ inputs.dry_run == true && '--dry-run' || '' }}
+
+      - name: Sync Files
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+        run: |
+          chmod +x scripts/sync-files
+          ./scripts/sync-files ${{ inputs.dry_run == true && '--dry-run' || '' }}
