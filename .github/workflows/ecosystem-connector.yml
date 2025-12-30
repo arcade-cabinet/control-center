@@ -27,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Agentic PR Review
-        uses: ./.github/actions/agentic-pr-review
+        uses: ./repository-files/always-sync/.github/actions/agentic-pr-review
         with:
           github_token: ${{ secrets.CI_GITHUB_TOKEN }}
           jules_api_key: ${{ secrets.GOOGLE_JULES_API_KEY }}
@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: CI Resolution
-        uses: ./.github/actions/agentic-ci-resolution
+        uses: ./repository-files/always-sync/.github/actions/agentic-ci-resolution
         with:
           github_token: ${{ secrets.CI_GITHUB_TOKEN }}
           cursor_api_key: ${{ secrets.CURSOR_API_KEY }}
