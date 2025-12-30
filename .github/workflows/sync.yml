@@ -1,4 +1,4 @@
-name: Sync Files
+name: Ecosystem Sync
 
 on:
   push:
@@ -6,6 +6,8 @@ on:
     paths:
       - 'repository-files/**'
       - 'repo-config.json'
+      - '.github/sync-always.yml'
+      - '.github/sync-initial.yml'
       - 'scripts/**'
   workflow_dispatch:
     inputs:
@@ -23,23 +25,75 @@ on:
         default: false
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  sync:
-    name: Sync to Org Repos
+  # =============================================================================
+  # Validate configuration before any sync
+  # =============================================================================
+  validate:
+    name: 🔍 Validate Configuration
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate all configs
+        run: |
+          chmod +x scripts/validate-config
+          ./scripts/validate-config --verbose
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
+  # =============================================================================
+  # Phase 1: Initial Sync
+  # Creates files ONLY if they don't exist
+  # =============================================================================
+  phase-1-initial:
+    name: 📦 Phase 1 - Initial Sync
+    needs: validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Initial file sync (create missing only)
+        uses: BetaHuhn/repo-file-sync-action@v1
         with:
-          python-version: '3.12'
+          GH_PAT: ${{ secrets.CI_GITHUB_TOKEN }}
+          CONFIG_PATH: .github/sync-initial.yml
+          DRY_RUN: ${{ inputs.dry_run == true }}
+          SKIP_PR: true
+          COMMIT_PREFIX: 'chore(init):'
+          GIT_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_USERNAME: github-actions[bot]
 
-      - name: Install vendor-connectors
-        run: pip install vendor-connectors
+  # =============================================================================
+  # Phase 2: Always Sync
+  # Overwrites files with latest shared configs
+  # =============================================================================
+  phase-2-always:
+    name: 🔄 Phase 2 - Always Sync
+    needs: phase-1-initial
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Always file sync (overwrite)
+        uses: BetaHuhn/repo-file-sync-action@v1
+        with:
+          GH_PAT: ${{ secrets.CI_GITHUB_TOKEN }}
+          CONFIG_PATH: .github/sync-always.yml
+          DRY_RUN: ${{ inputs.dry_run == true }}
+          SKIP_PR: true
+          COMMIT_PREFIX: 'chore(sync):'
+          GIT_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_USERNAME: github-actions[bot]
 
+  # =============================================================================
+  # Standardize Repository Settings & Secrets
+  # =============================================================================
+  manage-org:
+    name: 🛠️ Manage Org
+    needs: phase-2-always
+    runs-on: ubuntu-latest
+    if: always() && (needs.phase-2-always.result == 'success' || needs.phase-2-always.result == 'skipped')
+    steps:
+      - uses: actions/checkout@v4
+      
       - name: Sync Secrets
         if: github.event_name == 'push' || inputs.sync_secrets == true
         env:
@@ -59,10 +113,3 @@ jobs:
         run: |
           chmod +x scripts/configure-repos
           ./scripts/configure-repos ${{ inputs.dry_run == true && '--dry-run' || '' }}
-
-      - name: Sync Files
-        env:
-          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-        run: |
-          chmod +x scripts/sync-files
-          ./scripts/sync-files ${{ inputs.dry_run == true && '--dry-run' || '' }}
