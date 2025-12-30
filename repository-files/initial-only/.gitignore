@@ -1,0 +1,66 @@
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.env
+dist/
+.next/
+.svelte-kit/
+.vercel/
+
+# Rust
+/target/
+Cargo.lock
+**/*.rs.bk
+.cargo/config
+.cargo/credentials
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.env
+.pytest_cache/
+.ruff_cache/
+.tox/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Godot
+.godot/
+*.import
+export_presets.cfg
+*.translation
+
+# IDEs
+.vscode/
+.idea/
+.DS_Store
+*.swp
+*.swo
+
+# Project specific
+memory-bank/
+.clinerules
+.cursorrules
