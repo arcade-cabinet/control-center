@@ -705,9 +705,9 @@ main() {
   
   for repo in "${repos[@]}"; do
     if configure_repo "$repo"; then
-      ((count++))
+      count=$((count + 1))
     else
-      ((errors++))
+      errors=$((errors + 1))
     fi
     echo ""
   done
