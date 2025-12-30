@@ -3,10 +3,8 @@ name: Ecosystem Connector
 on:
   pull_request:
     types: [opened, synchronize, ready_for_review]
-
   issue_comment:
     types: [created]
-
   workflow_run:
     workflows: ["CI"]
     types: [completed]
@@ -19,40 +17,31 @@ permissions:
   actions: read
 
 jobs:
-  review:
-    name: AI Review
-    if: |
-      github.event_name == 'pull_request' && 
-      github.event.pull_request.draft == false
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: AI PR Review
-        uses: ./.github/actions/agentic-pr-review
-        with:
-          github_token: ${{ secrets.CI_GITHUB_TOKEN }}
-          jules_api_key: ${{ secrets.GOOGLE_JULES_API_KEY }}
+  # ==========================================================================
+  # AI Orchestration via Parent Control Center
+  # ==========================================================================
+  orchestrate:
+    name: Orchestrate
+    uses: jbcom/control-center/.github/workflows/ecosystem-orchestrator.yml@main
+    with:
+      action: ${{ 
+        github.event_name == 'pull_request' && 'review' || 
+        (github.event_name == 'issue_comment' && 'delegate') || 
+        'sync' 
+      }}
+      repository: ${{ github.repository }}
+      pr_number: ${{ github.event.pull_request.number }}
+      issue_number: ${{ github.event.issue.number }}
+      comment_body: ${{ github.event.comment.body }}
+    secrets:
+      CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+      ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      GOOGLE_JULES_API_KEY: ${{ secrets.GOOGLE_JULES_API_KEY }}
+      CURSOR_API_KEY: ${{ secrets.CURSOR_API_KEY }}
 
-  delegate:
-    name: Delegate Command
-    if: |
-      github.event_name == 'issue_comment' &&
-      (contains(github.event.comment.body, '/jules') || 
-       contains(github.event.comment.body, '/cursor'))
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - name: Issue Triage
-        uses: ./.github/actions/agentic-issue-triage
-        with:
-          github_token: ${{ secrets.CI_GITHUB_TOKEN }}
-          jules_api_key: ${{ secrets.GOOGLE_JULES_API_KEY }}
-          cursor_api_key: ${{ secrets.CURSOR_API_KEY }}
-          issue_number: ${{ github.event.issue.number }}
-          comment_body: ${{ github.event.comment.body }}
-          repository: ${{ github.repository }}
-          default_branch: ${{ github.event.repository.default_branch }}
-
+  # ==========================================================================
+  # Local Auto-fix for CI failures
+  # ==========================================================================
   fix-ci:
     name: Auto-fix CI
     if: |
@@ -66,3 +55,5 @@ jobs:
         with:
           github_token: ${{ secrets.CI_GITHUB_TOKEN }}
           cursor_api_key: ${{ secrets.CURSOR_API_KEY }}
+          workflow_run_id: ${{ github.event.workflow_run.id }}
+          branch: ${{ github.event.workflow_run.head_branch }}

@@ -13,7 +13,7 @@ on:
         default: false
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   sync:
@@ -40,31 +40,52 @@ jobs:
           echo "Syncing repository-files to all $ORG repos..."
           
           # Get list of repos using vendor-connectors CLI
-          # Extract non-archived repo names
           REPOS=$(vendor-connectors call github list_repositories --github_owner "$ORG" --jq '.[] | select(.archived == false) | .name')
           
           for repo in $REPOS; do
-            # Skip control-center itself and .github repo
+            # Skip control-center itself
             [[ "$repo" == "control-center" ]] && continue
-            [[ "$repo" == ".github" ]] && continue
             
             echo "📦 $ORG/$repo"
             
-            # Sync each file from repository-files/always-sync
+            # PHASE 1: Always Sync (Overwrite)
             find repository-files/always-sync -type f | while read -r file; do
               rel_path="${file#repository-files/always-sync/}"
               
               if [[ "$DRY_RUN" == "true" ]]; then
-                echo "  Would sync: $rel_path"
+                echo "  Would sync (always): $rel_path"
               else
-                # Use vendor-connectors to update file
                 content=$(cat "$file")
                 vendor-connectors call github update_repository_file \
                   --github_owner "$ORG" \
                   --github_repo "$repo" \
                   --file_path "$rel_path" \
                   --file_data "$content" \
-                  --msg "chore: sync $rel_path from control-center" > /dev/null 2>&1 && echo "  ✅ $rel_path" || echo "  ❌ $rel_path"
+                  --msg "chore(sync): update $rel_path from control-center" > /dev/null 2>&1 && echo "  ✅ $rel_path" || echo "  ❌ $rel_path"
               fi
             done
+            
+            # PHASE 2: Initial Sync (Create if missing)
+            if [ -d "repository-files/initial-only" ]; then
+              find repository-files/initial-only -type f | while read -r file; do
+                rel_path="${file#repository-files/initial-only/}"
+                # Remove first level directory (e.g., python/, node/) for destination
+                dest_path=$(echo "$rel_path" | cut -d/ -f2-)
+                
+                if [[ "$DRY_RUN" == "true" ]]; then
+                  echo "  Would sync (initial): $dest_path"
+                else
+                  # Only sync if file doesn't exist
+                  if ! gh api "repos/$ORG/$repo/contents/$dest_path" --jq '.name' >/dev/null 2>&1; then
+                    content=$(cat "$file")
+                    vendor-connectors call github update_repository_file \
+                      --github_owner "$ORG" \
+                      --github_repo "$repo" \
+                      --file_path "$dest_path" \
+                      --file_data "$content" \
+                      --msg "chore(init): create $dest_path from control-center" > /dev/null 2>&1 && echo "  🆕 $dest_path" || echo "  ❌ $dest_path"
+                  fi
+                fi
+              done
+            fi
           done
