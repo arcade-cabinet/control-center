@@ -27,18 +27,27 @@
   "ecosystems": {
     "python": {
       "files": {
-        "always": ["always-sync", "python"],
-        "initial": ["initial-only/python"]
+        "always": [
+          "always-sync",
+          "python"
+        ],
+        "initial": [
+          "initial-only/python"
+        ]
       },
       "repos": [
-        "dragons-labyrinth",
-        "rivers-of-reckoning"
+        "dragons-labyrinth"
       ]
     },
     "nodejs": {
       "files": {
-        "always": ["always-sync", "nodejs"],
-        "initial": ["initial-only/node"]
+        "always": [
+          "always-sync",
+          "nodejs"
+        ],
+        "initial": [
+          "initial-only/node"
+        ]
       },
       "repos": [
         "otter-elite-force",
@@ -46,13 +55,19 @@
         "realm-walker",
         "otter-river-rush",
         "protocol-silent-night",
-        "rivermarsh"
+        "rivermarsh",
+        "rivers-of-reckoning"
       ]
     },
     "rust": {
       "files": {
-        "always": ["always-sync", "rust"],
-        "initial": ["initial-only/rust"]
+        "always": [
+          "always-sync",
+          "rust"
+        ],
+        "initial": [
+          "initial-only/rust"
+        ]
       },
       "repos": [
         "echoes-of-beastlight",
@@ -68,7 +83,9 @@
   },
   "organizations": {
     "primary": "arcade-cabinet",
-    "managed": ["arcade-cabinet"],
+    "managed": [
+      "arcade-cabinet"
+    ],
     "domains": {
       "arcade-cabinet": "arcade-cabinet.org"
     }
