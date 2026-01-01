@@ -1,15 +1,43 @@
 # Initial-Sync Configuration
 # These files are synced ONLY if they do NOT exist in the target repository
 #
+# NOTE: CI/CD workflows are here because each game has unique build/test/deploy needs.
+# Once created, the game repo takes over management of its own CI/CD.
+#
 # Documentation: https://github.com/BetaHuhn/repo-file-sync-action
 
 group:
+  # ============================================================================
+  # CI/CD Workflows - Initial templates, repos manage their own after creation
+  # Each game has unique build processes, test setups, and deployment targets
+  # ============================================================================
+  - files:
+      - source: repository-files/initial-only/.github/workflows/ci.yml
+        dest: .github/workflows/ci.yml
+        replace: false
+      - source: repository-files/initial-only/.github/workflows/cd.yml
+        dest: .github/workflows/cd.yml
+        replace: false
+    repos: &all_repos |
+      arcade-cabinet/otter-elite-force
+      arcade-cabinet/dragons-labyrinth
+      arcade-cabinet/ebb-and-bloom
+      arcade-cabinet/realm-walker
+      arcade-cabinet/rivers-of-reckoning
+      arcade-cabinet/otter-river-rush
+      arcade-cabinet/protocol-silent-night
+      arcade-cabinet/rivermarsh
+      arcade-cabinet/echoes-of-beastlight
+      arcade-cabinet/cosmic-cults
+      arcade-cabinet/otterblade-odyssey
+
   # ============================================================================
   # Python Starter Templates
   # ============================================================================
   - files:
       - source: repository-files/initial-only/python/pyproject.toml
         dest: pyproject.toml
+        replace: false
     repos: |
       arcade-cabinet/dragons-labyrinth
       arcade-cabinet/rivers-of-reckoning
@@ -20,6 +48,7 @@ group:
   - files:
       - source: repository-files/initial-only/node/package.json
         dest: package.json
+        replace: false
     repos: |
       arcade-cabinet/otter-elite-force
       arcade-cabinet/ebb-and-bloom
@@ -27,6 +56,7 @@ group:
       arcade-cabinet/otter-river-rush
       arcade-cabinet/protocol-silent-night
       arcade-cabinet/rivermarsh
+      arcade-cabinet/otterblade-odyssey
 
   # ============================================================================
   # Rust Starter Templates
@@ -34,6 +64,7 @@ group:
   - files:
       - source: repository-files/initial-only/rust/Cargo.toml
         dest: Cargo.toml
+        replace: false
     repos: |
       arcade-cabinet/echoes-of-beastlight
       arcade-cabinet/cosmic-cults
