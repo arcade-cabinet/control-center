@@ -1,0 +1,12 @@
+{
+  "org": "arcade-cabinet",
+  "domain": "arcade-cabinet.org",
+  "parentOrg": "jbcom",
+  "focus": [
+  "Indie games",
+  "Arcade experiences",
+  "Game development"
+],
+  "syncedFrom": "jbcom/control-center",
+  "syncedAt": "2026-01-01T09:33:23Z"
+}
