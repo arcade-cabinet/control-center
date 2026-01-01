@@ -1,18 +1,22 @@
 # Always-Sync Configuration
 # These files are synced on EVERY run and OVERWRITE existing files
 #
+# NOTE: CI/CD workflows are in initial-only/ because each game has unique build needs.
+# Only AI workflows, cursor rules, and agents are synced always.
+#
 # Documentation: https://github.com/BetaHuhn/repo-file-sync-action
 
 group:
   # ============================================================================
   # Core files - synced to ALL repositories
+  # AI workflows, cursor rules, agents - NOT ci/cd (games are unique)
   # ============================================================================
   - files:
       # Cursor rules (always overwrite)
       - source: repository-files/always-sync/.cursor/rules/
         dest: .cursor/rules/
         deleteOrphaned: true
-      # GitHub workflows (don't delete repo-specific ones)
+      # GitHub workflows - AI and ecosystem workflows only (no ci/cd)
       - source: repository-files/always-sync/.github/workflows/
         dest: .github/workflows/
         deleteOrphaned: false
@@ -34,35 +38,4 @@ group:
       arcade-cabinet/rivermarsh
       arcade-cabinet/echoes-of-beastlight
       arcade-cabinet/cosmic-cults
-
-  # ============================================================================
-  # Language-specific - synced to specific ecosystems
-  # ============================================================================
-  
-  # Python
-  - files:
-      - source: repository-files/always-sync/.github/workflows/ci.yml
-        dest: .github/workflows/ci.yml
-    repos: |
-      arcade-cabinet/dragons-labyrinth
-      arcade-cabinet/rivers-of-reckoning
-
-  # Node.js
-  - files:
-      - source: repository-files/always-sync/.github/workflows/ci.yml
-        dest: .github/workflows/ci.yml
-    repos: |
-      arcade-cabinet/otter-elite-force
-      arcade-cabinet/ebb-and-bloom
-      arcade-cabinet/realm-walker
-      arcade-cabinet/otter-river-rush
-      arcade-cabinet/protocol-silent-night
-      arcade-cabinet/rivermarsh
-
-  # Rust
-  - files:
-      - source: repository-files/always-sync/.github/workflows/ci.yml
-        dest: .github/workflows/ci.yml
-    repos: |
-      arcade-cabinet/echoes-of-beastlight
-      arcade-cabinet/cosmic-cults
+      arcade-cabinet/otterblade-odyssey
