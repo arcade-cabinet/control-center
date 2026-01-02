@@ -25,7 +25,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Agentic PR Review
         uses: ./.github/actions/agentic-pr-review
         with:
@@ -42,7 +42,7 @@ jobs:
       github.event.workflow_run.conclusion == 'failure'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: CI Resolution
         uses: ./.github/actions/agentic-ci-resolution
         with:
